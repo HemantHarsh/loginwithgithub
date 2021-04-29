@@ -55,6 +55,7 @@ app.post("/authenticate", (req, res) => {
     })
     .then((response) => response.json())
     .then((response) => {
+      response["accesstoken"] = accesstoken;
       return res.status(200).json(response);
     })
     .catch((error) => {

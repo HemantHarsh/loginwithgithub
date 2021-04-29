@@ -2,31 +2,55 @@ import React, { useContext, useEffect } from "react";
 import { Redirect } from "react-router-dom";
 import Styled from "styled-components";
 import { AuthContext } from "../App";
+import { Octokit } from "@octokit/rest";
 // import { accesstoken } from "../server/index";
 import axios from "axios";
 export default function Home() {
-  const access_token = localStorage.getItem("access_token");
+  // const access_token = localStorage.getItem("access_token");
   const { state, dispatch } = useContext(AuthContext);
-  const a = 3;
+  let accesstoken = "";
+  // console.log(state.user.accesstoken);
+  debugger;
+  if (state.user != null) {
+    accesstoken = state.user.accesstoken;
+  }
+  let shaKey = "";
+  const octokit = new Octokit({
+    auth: accesstoken,
+  });
 
-  // const getData = () => {
-  //   // http://localhost:5000/authenticate
+  const getData = () => {
+    octokit
+      .request(
+        "GET /repos/anushka-beri/static-site-generator/contents/src/data/menuItems.json",
+        {
+          owner: "anushka-beri",
+          repo: "static-site-generator",
+          path: "data/menuItems.json",
+        }
+      )
+      .then((res) => {
+        shaKey = res.data.sha;
+        let decodedString = JSON.parse(atob(res.data.content));
+        console.log(decodedString);
+        // setTempArr(decodedString);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
+  };
 
-  //   axios
-  //     .post("http://localhost:5000/authenticate")
-  //     .then((res) => console.log("res", res));
-  // };
-
-  // useEffect(() => {
-  //   getData();
-  // }, []);
+  useEffect(() => {
+    getData();
+    //get API - gets data frm data/menuItems.js
+  }, []);
 
   if (!state.isLoggedIn) {
     return <Redirect to="/login" />;
   }
 
-  const { avatar_url, name, public_repos, followers, following } = state.user;
-  console.log(state.user);
+  // const { avatar_url, name, public_repos, followers, following } = state.user;
+  // console.log(state.user.accesstoken);
 
   const handleLogout = () => {
     dispatch({
@@ -39,14 +63,15 @@ export default function Home() {
       <div className="container">
         <button onClick={() => handleLogout()}>Logout</button>
         <div>
-          <div className="content">
+          <button onClick={getData}>get api</button>
+          {/* <div className="content">
             <img src={avatar_url} alt="Avatar" />
             <span>{name}</span>
             <span>{public_repos} Repos</span>
             <span>{followers} Followers</span>
             <span>{following} Following</span>
             <span>{process.env.REACT_APP_TOKEN} token</span>
-          </div>
+          </div> */}
         </div>
       </div>
     </Wrapper>
